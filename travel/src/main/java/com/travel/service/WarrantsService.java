@@ -6,6 +6,10 @@ import java.util.Optional;
 
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
+import com.travel.dto.Calculated;
+import com.travel.jdbc.JdbcClient;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.travel.dto.WarrantDto;
@@ -21,6 +25,17 @@ public class WarrantsService {
     private WarrantsRepository warrantsRepository;
     private WarrantsMapper warrantsMapper;
     private PdfCreator pdfCreator;
+    private JdbcClient jdbcClient;
+
+    public List<Calculated> findAllWarrantsAndTheirCostOfTravel(final String sort){
+        if(sort.equals("ascending")){
+            return this.jdbcClient.findAllWarrantsAndTheirCostOfTravelASC();
+        } else if (sort.equals("descending")){
+            return this.jdbcClient.findAllWarrantsAndTheirCostOfTravelDESC();
+        } else {
+            return null;
+        }
+    }
 
     public List<WarrantDto> findAll() {
         return this.warrantsMapper.toDtoList(this.warrantsRepository.findALlWarrants());

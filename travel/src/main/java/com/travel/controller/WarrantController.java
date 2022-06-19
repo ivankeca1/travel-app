@@ -1,5 +1,7 @@
 package com.travel.controller;
 
+import com.travel.dto.Calculated;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,6 +24,7 @@ import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Controller
 @RequestMapping("api/v1/warrants")
@@ -31,6 +34,16 @@ public class WarrantController {
     private final ExpensesRepository expensesRepository;
     private final WarrantsService warrantsService;
     private final WarrantsMapper warrantsMapper;
+
+    @GetMapping("/calculated/{sort}")
+    public ResponseEntity findAllWarrantsAndTheirCostOfTravel(@PathVariable final String sort){
+        List<Calculated> calculatedList = this.warrantsService.findAllWarrantsAndTheirCostOfTravel(sort);
+        if(calculatedList != null){
+            return ResponseEntity.ok(calculatedList);
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity getAllWarrants() {
