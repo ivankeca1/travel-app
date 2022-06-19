@@ -16,8 +16,18 @@ public class FetchResultsFromDistantApi {
     }
 
     @GetMapping("api/v1/distant-api-result-fetcher/{param}")
-    public ResponseEntity getResultFromDistantRestApi(@PathVariable final String param){
+    public ResponseEntity getStringFromDistantRestApi(@PathVariable final String param){
         return ResponseEntity.ok(this.distantApiRestClient.getResponseFromDistantRestApi(param));
+    }
+
+    @GetMapping("api/v1/distant-api-result-fetcher/warrant")
+    public ResponseEntity getWarrantFromDistantRestApi(){
+        return ResponseEntity.ok(this.distantApiRestClient.getWarrantFromDistantRestApi());
+    }
+
+    @GetMapping("api/v1/distant-api-result-fetcher/expenses")
+    public ResponseEntity getExpensesFromDistantRestApi(){
+        return ResponseEntity.ok(this.distantApiRestClient.getExpensesFromDistantRestApi());
     }
 
 
