@@ -1,15 +1,16 @@
 package com.travel.service;
 
 import java.io.ByteArrayOutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Optional;
 
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
+import com.sun.jna.platform.win32.Advapi32Util;
+import com.sun.jna.platform.win32.WinReg;
 import com.travel.dto.Calculated;
 import com.travel.jdbc.JdbcClient;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.travel.dto.WarrantDto;
@@ -27,10 +28,10 @@ public class WarrantsService {
     private PdfCreator pdfCreator;
     private JdbcClient jdbcClient;
 
-    public List<Calculated> findAllWarrantsAndTheirCostOfTravel(final String sort){
-        if(sort.equals("ascending")){
+    public List<Calculated> findAllWarrantsAndTheirCostOfTravel(final String sort) {
+        if (sort.equals("ascending")) {
             return this.jdbcClient.findAllWarrantsAndTheirCostOfTravelASC();
-        } else if (sort.equals("descending")){
+        } else if (sort.equals("descending")) {
             return this.jdbcClient.findAllWarrantsAndTheirCostOfTravelDESC();
         } else {
             return null;
