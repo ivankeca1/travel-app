@@ -20,8 +20,7 @@ public class DistantApiRestClient {
 
     public ExpensesDto getExpensesFromDistantRestApi(){
         RestTemplate restTemplate = new RestTemplate();
-        return restTemplate.getForObject("http://localhost:8082/api/v1/distant-rest-api/get-xpenses", ExpensesDto.class);
+        return restTemplate.getForObject("http://localhost:8082/api/v1/distant-rest-api/get-expenses", ExpensesDto.class);
     }
-
 
 }
