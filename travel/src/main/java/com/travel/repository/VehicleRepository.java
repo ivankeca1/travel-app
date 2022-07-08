@@ -12,5 +12,4 @@ public interface VehicleRepository extends PagingAndSortingRepository<Vehicle, L
     List<Vehicle> findAll();
     void deleteById(Long id);
 
-
 }

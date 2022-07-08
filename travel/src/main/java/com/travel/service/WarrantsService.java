@@ -1,14 +1,12 @@
 package com.travel.service;
 
 import java.io.ByteArrayOutputStream;
-import java.lang.reflect.InvocationTargetException;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
-import com.sun.jna.platform.win32.Advapi32Util;
-import com.sun.jna.platform.win32.WinReg;
 import com.travel.dto.Calculated;
 import com.travel.jdbc.JdbcClient;
 import org.springframework.stereotype.Service;
@@ -27,6 +25,7 @@ public class WarrantsService {
     private WarrantsMapper warrantsMapper;
     private PdfCreator pdfCreator;
     private JdbcClient jdbcClient;
+    private LoggingService loggingService;
 
     public List<Calculated> findAllWarrantsAndTheirCostOfTravel(final String sort) {
         if (sort.equals("ascending")) {
@@ -38,12 +37,23 @@ public class WarrantsService {
         }
     }
 
+    public List<Calculated> findAllWarrantsAndTheirCostOfTravelWithFilter(final String costOfTravel, final String mode, final String order) {
+        return this.jdbcClient.findAllWarrantsAndTheirCostOfTravelASCWithFilter(costOfTravel, mode, order);
+    }
+
     public List<WarrantDto> findAll() {
         return this.warrantsMapper.toDtoList(this.warrantsRepository.findALlWarrants());
     }
 
-    public void saveWarrant(final WarrantDto warrantDto) {
-        this.warrantsRepository.save(this.warrantsMapper.toModel(warrantDto));
+    public Warrant saveWarrant(final WarrantDto warrantDto) {
+        try {
+            this.loggingService.writeToLogs("Warrant saved.");
+            return this.warrantsRepository.save(this.warrantsMapper.toModel(warrantDto));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
     }
 
     public Warrant findById(final long id) {
@@ -52,18 +62,32 @@ public class WarrantsService {
     }
 
     public void deleteById(final Long id) {
-        this.warrantsRepository.deleteById(id);
+        try {
+            this.loggingService.writeToLogs("Warrant with id " + id + " deleted.");
+            this.warrantsRepository.deleteById(id);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public ByteArrayOutputStream generatePdf(long warrantId) {
-        final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        final PdfWriter writer = new PdfWriter(byteArrayOutputStream);
-        final PdfDocument pdfDocument = new PdfDocument(writer);
+        try {
+            this.loggingService.writeToLogs("Started generating PDF.");
+            final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            final PdfWriter writer = new PdfWriter(byteArrayOutputStream);
+            final PdfDocument pdfDocument = new PdfDocument(writer);
 
-        if (this.pdfCreator.constructDocument(pdfDocument, warrantId)) {
-            return byteArrayOutputStream;
-        } else {
-            return null;
+            if (this.pdfCreator.constructDocument(pdfDocument, warrantId)) {
+                this.loggingService.writeToLogs("Finished generating PDF.");
+                return byteArrayOutputStream;
+            } else {
+                this.loggingService.writeToLogs("Finished generating PDF.");
+                return null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        return null;
     }
 }

@@ -42,22 +42,48 @@ public class VehicleMapper {
     }
 
     //Cyphers registration plates - decrypting is done in the @toDecryptedVehicleRegistrationDto method
-    public Vehicle toModel(final VehicleDto dto){
+    public Vehicle toModel(final VehicleDto dto) {
         final Vehicle model = new Vehicle();
 
         model.setId(dto.getId());
         model.setModel(dto.getModel());
 
+        final Thread idThread = new Thread(() -> {
+            model.setId(dto.getId());
+        });
+
+        final Thread modelThread = new Thread(() -> {
+            model.setModel(dto.getModel());
+        });
+
+        final Thread cipheringThread = new Thread(() -> {
+            try {
+                final String input = dto.getRegistration();
+                final String cipheredVehicleRegistration = encrypt(ALGORITHM, input, KEY, IV_PARAMETER_SPEC);
+                System.out.println("Ciphered " + dto.getRegistration() + " successfully into " + cipheredVehicleRegistration);
+                model.setRegistration(cipheredVehicleRegistration);
+            } catch (InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | BadPaddingException | InvalidKeyException e) {
+                e.printStackTrace();
+            }
+        });
+
+        final Thread imageProcessingThread = new Thread(() -> {
+            model.setImage(dto.getImage().getBytes(StandardCharsets.UTF_8));
+        });
+
+        idThread.start();
+        modelThread.start();
+        cipheringThread.start();
+        imageProcessingThread.start();
+
         try {
-            final String input = dto.getRegistration();
-            final String cipheredVehicleRegistration = encrypt(ALGORITHM, input, KEY, IV_PARAMETER_SPEC);
-            System.out.println("Ciphered " + dto.getRegistration() + " successfully into " + cipheredVehicleRegistration);
-            model.setRegistration(cipheredVehicleRegistration);
-        } catch (InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | BadPaddingException | InvalidKeyException e) {
+            idThread.join();
+            modelThread.join();
+            cipheringThread.join();
+            imageProcessingThread.join();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        model.setImage(dto.getImage().getBytes(StandardCharsets.UTF_8));
 
         return model;
     }

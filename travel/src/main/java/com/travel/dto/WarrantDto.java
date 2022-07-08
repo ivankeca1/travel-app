@@ -17,6 +17,6 @@ public class WarrantDto {
     private String creationDate;
     private String warrantStatus;
     private long expensesId;
-
+    private long vehicleId;
 
 }

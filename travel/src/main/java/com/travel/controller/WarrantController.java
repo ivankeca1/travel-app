@@ -1,18 +1,25 @@
 package com.travel.controller;
 
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.text.DocumentException;
+import com.lowagie.text.Document;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.rtf.RtfWriter2;
+import com.lowagie.text.rtf.document.RtfDocument;
 import com.travel.dto.Calculated;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.travel.dto.WarrantDto;
-import com.travel.exception.NoExpensesAttachedToWarrantException;
 import com.travel.model.Warrant;
 import com.travel.repository.ExpensesRepository;
 import com.travel.service.WarrantsMapper;
@@ -25,6 +32,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -44,6 +52,11 @@ public class WarrantController {
         } else {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @GetMapping("/calculated")
+    public ResponseEntity findAllWarrantsAndTheirCostOfTraveWithFilter(@RequestParam final String costOfTravel, @RequestParam final String mode, @RequestParam final String order){
+        return new ResponseEntity(this.warrantsService.findAllWarrantsAndTheirCostOfTravelWithFilter(costOfTravel, mode, order), HttpStatus.OK);
     }
 
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_XML_VALUE)
@@ -117,14 +130,23 @@ public class WarrantController {
 
     }
 
-    @GetMapping(value = "write-to-file")
-    public ResponseEntity writeToBinary(@RequestBody final WarrantDto warrantDto) throws URISyntaxException {
+    @GetMapping(value = "write-to-file/{key}")
+    public ResponseEntity writeToBinary(@PathVariable final String key) throws URISyntaxException {
         final URL resource = this.getClass().getClassLoader().getResource("test.bin");
         final File file = new File(resource.toURI());
 
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String username = null;
+
+        if (principal instanceof UserDetails) {
+            username = ((UserDetails)principal).getUsername();
+        } else {
+            username = principal.toString();
+        }
+
         try (final FileOutputStream fos = new FileOutputStream(file, true)) {
             fos.write("\n".getBytes(StandardCharsets.UTF_8)); //new line
-            fos.write(warrantDto.toString().getBytes(StandardCharsets.UTF_8));
+            fos.write((username + ":" + key).getBytes(StandardCharsets.UTF_8));
             System.out.println("Successfully written data to the file");
             return new ResponseEntity(HttpStatus.OK);
         } catch (final IOException ex) {
@@ -135,8 +157,8 @@ public class WarrantController {
 
     @PostMapping
     public ResponseEntity createWarrant(@RequestBody final WarrantDto warrantDto) {
-        this.warrantsService.saveWarrant(warrantDto);
-        return new ResponseEntity(warrantDto, HttpStatus.OK);
+
+        return new ResponseEntity(this.warrantsMapper.toDto(this.warrantsService.saveWarrant(warrantDto)), HttpStatus.OK);
     }
 
     @DeleteMapping(value = "/{id}")
@@ -148,7 +170,7 @@ public class WarrantController {
     @GetMapping(value = "/{id}/generate-pdf")
     public ResponseEntity generatePdf(@PathVariable final long id) {
         final ByteArrayOutputStream byteArrayOutputStream = this.warrantsService.generatePdf(id);
-        final String headerValue = "attachment;filename=generated-pdf.pdf";
+        final String headerValue = "attachment;filename=generated-pdf.rtf";
         return ResponseEntity
                 .ok()
                 .contentLength(byteArrayOutputStream.size())
@@ -156,6 +178,33 @@ public class WarrantController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, headerValue)
                 .body(byteArrayOutputStream.toByteArray());
 
+    }
+
+    @GetMapping(value = "/{id}/generate-rtf")
+    public ResponseEntity generateRtf(@PathVariable final long id) throws FileNotFoundException, DocumentException, com.lowagie.text.DocumentException {
+        Document document = new Document();
+        RtfWriter2.getInstance(document, new FileOutputStream(
+                "RTF-test.rtf"));
+        document.open();
+        document.add(new Paragraph("Hello World"));
+        document.close();
+
+        final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        RtfWriter2.getInstance(document, byteArrayOutputStream);
+        final RtfDocument rtfDocument = new RtfDocument();
+
+        return null; //TODO
+    }
+
+    @GetMapping(value = "/lookup")
+    public ResponseEntity lookup(){
+        List<Warrant> warrants = new ArrayList<>();
+
+        for(WarrantDto dto : this.warrantsService.findAll()){
+            warrants.add(this.warrantsMapper.toModel(dto));
+        }
+
+        return new ResponseEntity(warrants, HttpStatus.OK);
     }
 
 }

@@ -30,16 +30,27 @@ public class VehicleController {
         return new ResponseEntity(this.vehicleService.findAll(), HttpStatus.OK);
     }
 
-    @PostMapping(value = "/json-example", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity createVehicleJsonExample(@RequestBody final VehicleDto vehicleDto){
         this.vehicleService.saveVehicle(vehicleDto);
         return new ResponseEntity(HttpStatus.OK);
     }
 
-    @PostMapping(value = "/xml-example", consumes = MediaType.APPLICATION_XML_VALUE)
+    @PostMapping(value = "/xml-example/create", consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity createVehicleXmlExample(@RequestBody final VehicleDto vehicleDto){
-        this.vehicleService.saveVehicle(vehicleDto);
-        return new ResponseEntity(HttpStatus.OK);
+        VehicleDto vehicleDto1 = this.vehicleService.saveVehicle(vehicleDto);
+        return new ResponseEntity(vehicleDto1, HttpStatus.OK);
+    }
+
+    @DeleteMapping(value = "/xml-example/delete/{id}", produces = MediaType.APPLICATION_XML_VALUE)
+    public ResponseEntity deleteVehicleXmlExample(@PathVariable final long id){
+        this.vehicleService.deleteById(id);
+        return new ResponseEntity("Vehicle deleted", HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/xml-example/read/{id}", produces = MediaType.APPLICATION_XML_VALUE)
+    public ResponseEntity readVehicleXmlExample(@PathVariable final long id){
+        return new ResponseEntity(this.vehicleService.findById(id), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")

@@ -14,7 +14,9 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.itextpdf.text.pdf.BaseFont;
+import com.travel.model.Expenses;
 import com.travel.model.Warrant;
+import com.travel.repository.ExpensesRepository;
 import com.travel.repository.WarrantsRepository;
 import org.springframework.stereotype.Service;
 
@@ -26,9 +28,13 @@ public class PdfCreator {
 
     private static PdfFont font;
     private final WarrantsRepository warrantRepository;
+    private final ExpensesRepository expensesRepository;
+    private final ExpensesMapper expensesMapper;
 
-    public PdfCreator(WarrantsRepository warrantsRepository) {
+    public PdfCreator(WarrantsRepository warrantsRepository, ExpensesRepository expensesRepository, ExpensesMapper expensesMapper) {
         this.warrantRepository = warrantsRepository;
+        this.expensesRepository = expensesRepository;
+        this.expensesMapper = expensesMapper;
     }
 
     public boolean constructDocument(final PdfDocument pdfDocument, final long warrantId) {
@@ -47,12 +53,35 @@ public class PdfCreator {
             document.add(this.constructCompanyNameTable());
             document.add(this.constructWarrantNumberAndDateTable());
             document.add(this.constructHeadingTable());
+            document.add(this.addExpeses(warrantId));
 
             document.close();
             return true;
         } else {
             return false;
         }
+    }
+
+    private Table addExpeses(final long id) {
+        Expenses expenses = this.expensesRepository.findById(id);
+        if(expenses != null){
+            final Table expensesTable = new Table(UnitValue.createPercentArray(1)).useAllAvailableWidth();
+
+            final Cell expensesCell = new Cell();
+            final Paragraph travelCostParagraph = new Paragraph("Ukupni trošak putovanja po ovom nalogu iznosi: " + expenses.getCostOfTravel() + "\n");
+            final Paragraph dateOfTravelParagraph = new Paragraph("Datum putovanja: " + expenses.getDateOfTravel() + "\n");
+            final Paragraph signature = new Paragraph("Ovaj nalog je generiran te je kao takav važeć bez potpisa.\n");
+
+            expensesCell.add(travelCostParagraph);
+            expensesCell.add(dateOfTravelParagraph);
+            expensesCell.add(signature);
+
+            expensesTable.addCell(expensesCell);
+
+            return expensesTable;
+        }
+
+        return null;
     }
 
 

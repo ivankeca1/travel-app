@@ -20,6 +20,8 @@ public class ExpensesMapper {
         dto.setId(expenses.getId());
         dto.setCostOfTravel(expenses.getCostOfTravel());
         dto.setNationalCurrency(this.nationalCurrency);
+        dto.setDateOfTravel(expenses.getDateOfTravel());
+        dto.setExtraCost(expenses.getExtraCost());
 
         return dto;
     }
@@ -28,6 +30,14 @@ public class ExpensesMapper {
         final Expenses model = new Expenses();
         model.setId(expensesDto.getId());
         model.setCostOfTravel(expensesDto.getCostOfTravel());
+        model.setDateOfTravel(expensesDto.getDateOfTravel());
+        model.setExtraCost(expensesDto.getExtraCost());
+
+        if(expensesDto.getNationalCurrency() == null){
+            model.setNationalCurrency(this.nationalCurrency);
+        } else {
+            model.setNationalCurrency(expensesDto.getNationalCurrency());
+        }
 
         return model;
     }
