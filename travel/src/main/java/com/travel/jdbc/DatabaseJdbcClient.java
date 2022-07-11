@@ -1,20 +1,17 @@
 package com.travel.jdbc;
 
 import com.travel.dto.Calculated;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class JdbcClient {
+public class DatabaseJdbcClient {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public JdbcClient(JdbcTemplate jdbcTemplate) {
+    public DatabaseJdbcClient(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 

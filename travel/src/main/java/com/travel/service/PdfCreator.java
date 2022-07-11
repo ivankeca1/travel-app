@@ -18,13 +18,22 @@ import com.travel.model.Expenses;
 import com.travel.model.Warrant;
 import com.travel.repository.ExpensesRepository;
 import com.travel.repository.WarrantsRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class PdfCreator {
+
+    @Value("${multithreading.pdf}")
+    String multithreading;
 
     private static PdfFont font;
     private final WarrantsRepository warrantRepository;
@@ -50,10 +59,43 @@ public class PdfCreator {
 
             final Document document = new Document(pdfDocument);
 
-            document.add(this.constructCompanyNameTable());
-            document.add(this.constructWarrantNumberAndDateTable());
-            document.add(this.constructHeadingTable());
-            document.add(this.addExpeses(warrantId));
+            if(multithreading.toLowerCase(Locale.ROOT).equals("true")){
+
+                long begin = System.currentTimeMillis();
+
+                CompletableFuture<Table> constructCompanyNameTableCF = CompletableFuture.supplyAsync(this::constructCompanyNameTable);
+                CompletableFuture<Table> constructWarrantNumberAndDateTableCF = CompletableFuture.supplyAsync(this::constructWarrantNumberAndDateTable);
+                CompletableFuture<Table> constructHeadingTableCF = CompletableFuture.supplyAsync(this::constructHeadingTable);
+                CompletableFuture<Table> addExpensesCF = CompletableFuture.supplyAsync(() -> this.addExpeses(warrantId));
+
+                try {
+                    document.add(constructCompanyNameTableCF.get());
+                    document.add(constructWarrantNumberAndDateTableCF.get());
+                    document.add(constructHeadingTableCF.get());
+                    document.add(addExpensesCF.get());
+
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+
+                long end = System.currentTimeMillis();
+                System.out.println("-------------------");
+                System.out.println("Time spent: " + (double)(end - begin));
+                System.out.println("-------------------");
+            } else {
+
+                long begin = System.currentTimeMillis();
+
+                document.add(this.constructCompanyNameTable());
+                document.add(this.constructWarrantNumberAndDateTable());
+                document.add(this.constructHeadingTable());
+                document.add(this.addExpeses(warrantId));
+
+                long end = System.currentTimeMillis();
+                System.out.println("-------------------");
+                System.out.println("Time spent: " + (double)(end - begin));
+                System.out.println("-------------------");
+            }
 
             document.close();
             return true;

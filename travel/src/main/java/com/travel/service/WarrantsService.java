@@ -8,7 +8,7 @@ import java.util.Optional;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.travel.dto.Calculated;
-import com.travel.jdbc.JdbcClient;
+import com.travel.jdbc.DatabaseJdbcClient;
 import org.springframework.stereotype.Service;
 
 import com.travel.dto.WarrantDto;
@@ -24,7 +24,7 @@ public class WarrantsService {
     private WarrantsRepository warrantsRepository;
     private WarrantsMapper warrantsMapper;
     private PdfCreator pdfCreator;
-    private JdbcClient jdbcClient;
+    private DatabaseJdbcClient jdbcClient;
     private LoggingService loggingService;
 
     public List<Calculated> findAllWarrantsAndTheirCostOfTravel(final String sort) {

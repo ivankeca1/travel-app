@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.jayway.jsonpath.internal.JsonFormatter;
 import com.travel.log.Log;
 import org.apache.commons.io.FileUtils;
-import org.bouncycastle.crypto.CryptoException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
@@ -18,7 +17,10 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.*;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
@@ -98,11 +100,9 @@ public class LoggingService {
                 DOMSource source = new DOMSource(doc);
 
                 //write to console or file
-                StreamResult console = new StreamResult(System.out);
                 StreamResult file = new StreamResult(new File(xmlLogFileLocation));
 
                 //write data
-                transformer.transform(source, console);
                 transformer.transform(source, file);
                 this.formatLogs(doc);
                 System.out.println("DONE");
@@ -131,11 +131,9 @@ public class LoggingService {
                 DOMSource source = new DOMSource(doc);
 
                 //write to console or file
-                StreamResult console = new StreamResult(System.out);
                 StreamResult file = new StreamResult(new File(xmlLogFileLocation));
 
                 //write data
-                transformer.transform(source, console);
                 transformer.transform(source, file);
                 this.formatLogs(doc);
                 System.out.println("DONE");
@@ -190,11 +188,9 @@ public class LoggingService {
                 DOMSource source = new DOMSource(doc);
 
                 //write to console or file
-                StreamResult console = new StreamResult(System.out);
                 StreamResult file = new StreamResult(new File(xmlLogFileLocation));
 
                 //write data
-                transformer.transform(source, console);
                 transformer.transform(source, file);
                 this.formatLogs(doc);
                 System.out.println("DONE");
@@ -257,7 +253,6 @@ public class LoggingService {
         return false;
     }
 
-
     private static Node getLogDate(Document doc, String date) {
         Element node = doc.createElement("date");
         node.appendChild(doc.createTextNode(date));
@@ -268,38 +263,6 @@ public class LoggingService {
         Element node = doc.createElement("message");
         node.appendChild(doc.createTextNode(messageValue));
         return node;
-    }
-
-    public boolean encryptLogs(String key) {
-        File inputJsonFile = new File(jsonLogFileLocation);
-        File inputXmlFile = new File(xmlLogFileLocation);
-
-        String encryptedJsonLogFilePath = homeFolder + "JSON-logs.encrypted";
-        String decryptedJsonLogFilePath = homeFolder + "JSON-logs.decrypted";
-
-        String encryptedXmlLogFilePath = homeFolder + "XML-logs.encrypted";
-        String decryptedXmlLogFilePath = homeFolder + "XML-logs.decrypted";
-
-        File encryptedJsonFile = new File(encryptedJsonLogFilePath);
-        File decryptedJsonFile = new File(decryptedJsonLogFilePath);
-
-        File encryptedXmlFile = new File(encryptedXmlLogFilePath);
-        File decryptedXmlFile = new File(decryptedXmlLogFilePath);
-
-        try {
-            CryptoUtils.encrypt(key, inputJsonFile, encryptedJsonFile);
-            CryptoUtils.decrypt(key, encryptedJsonFile, decryptedJsonFile);
-
-            CryptoUtils.encrypt(key, inputXmlFile, encryptedXmlFile);
-            CryptoUtils.decrypt(key, encryptedXmlFile, decryptedXmlFile);
-
-            return true;
-        } catch (CryptoException ex) {
-            System.out.println(ex.getMessage());
-            ex.printStackTrace();
-
-            return false;
-        }
     }
 
 }
