@@ -31,9 +31,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
           .authorizeRequests()
-          .antMatchers("/api/v1/expenses**")
+          .antMatchers("/api/v1/expenses/**")
           .hasAuthority("ROLE_OFFICE_MANAGER")
-          .antMatchers("/api/v1/warrants**")
+          .antMatchers("/api/v1/warrants/**")
           .hasAnyAuthority("ROLE_EMPLOYEE", "ROLE_OFFICE_MANAGER")
           .anyRequest()
           .authenticated()

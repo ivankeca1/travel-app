@@ -22,8 +22,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -38,12 +36,10 @@ public class PdfCreator {
     private static PdfFont font;
     private final WarrantsRepository warrantRepository;
     private final ExpensesRepository expensesRepository;
-    private final ExpensesMapper expensesMapper;
 
-    public PdfCreator(WarrantsRepository warrantsRepository, ExpensesRepository expensesRepository, ExpensesMapper expensesMapper) {
+    public PdfCreator(WarrantsRepository warrantsRepository, ExpensesRepository expensesRepository) {
         this.warrantRepository = warrantsRepository;
         this.expensesRepository = expensesRepository;
-        this.expensesMapper = expensesMapper;
     }
 
     public boolean constructDocument(final PdfDocument pdfDocument, final long warrantId) {
@@ -64,7 +60,7 @@ public class PdfCreator {
                 long begin = System.currentTimeMillis();
 
                 CompletableFuture<Table> constructCompanyNameTableCF = CompletableFuture.supplyAsync(this::constructCompanyNameTable);
-                CompletableFuture<Table> constructWarrantNumberAndDateTableCF = CompletableFuture.supplyAsync(this::constructWarrantNumberAndDateTable);
+                CompletableFuture<Table> constructWarrantNumberAndDateTableCF = CompletableFuture.supplyAsync(() -> this.constructWarrantNumberAndDateTable(optionalWarrant));
                 CompletableFuture<Table> constructHeadingTableCF = CompletableFuture.supplyAsync(this::constructHeadingTable);
                 CompletableFuture<Table> addExpensesCF = CompletableFuture.supplyAsync(() -> this.addExpeses(warrantId));
 
@@ -87,7 +83,7 @@ public class PdfCreator {
                 long begin = System.currentTimeMillis();
 
                 document.add(this.constructCompanyNameTable());
-                document.add(this.constructWarrantNumberAndDateTable());
+                document.add(this.constructWarrantNumberAndDateTable(optionalWarrant));
                 document.add(this.constructHeadingTable());
                 document.add(this.addExpeses(warrantId));
 
@@ -161,12 +157,12 @@ public class PdfCreator {
         return companyName;
     }
 
-    private Table constructWarrantNumberAndDateTable() {
+    private Table constructWarrantNumberAndDateTable(Optional<Warrant> warrant) {
         final Table warrantNumberAndDate = new Table(UnitValue.createPercentArray(3)).useAllAvailableWidth();
 
         final Cell warrantNumberCell = new Cell();
         final Paragraph warrantNumberLabel = new Paragraph();
-        warrantNumberLabel.add("Broj naloga: ").add(" 134").setFont(font);
+        warrant.ifPresent(value -> warrantNumberLabel.add("Broj naloga: ").add(String.valueOf(value.getId())).setFont(font));
         warrantNumberCell.add(warrantNumberLabel);
         warrantNumberCell.setTextAlignment(TextAlignment.CENTER);
 
